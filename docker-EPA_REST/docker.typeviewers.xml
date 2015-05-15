@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TypeViewerSet xmlns="wily.typeviews" xmlns:its="http://www.w3.org/2005/11/its"
+	namespace="Docker" version="2.0">
+	<!-- Docker Component Definition -->
+	<ComponentDefinition id="docker-graph">
+		<Panel columns="3" layout="GridLayout" rows="1">
+			<Graph relative-specifier=":(Container Count|Running Containers)">
+				<Title its:translate="yes">Container Count</Title>
+			</Graph>
+			<Graph relative-specifier=":Image Count">
+				<Title its:translate="yes">Image Count</Title>
+			</Graph>
+      <Graph relative-specifier=":Total Memory">
+        <Title its:translate="yes">Total Memory</Title>
+      </Graph>
+		</Panel>
+	</ComponentDefinition>
+	<ComponentDefinition id="container-table">
+		<MetricDataTable show-bottom-graph="true">
+			<Column content-type="LastPrefixSegment">
+				<Title its:translate="yes">Name</Title>
+			</Column>
+			<Column content-type="StringValue" relative-specifier=":Image">
+				<Title its:translate="yes">Image</Title>
+			</Column>
+			<Column content-type="NumericalValue" relative-specifier=":Status">
+				<Title its:translate="yes">Status</Title>
+			</Column>
+			<Column content-type="NumericalValue" relative-specifier=":SizeRw">
+				<Title its:translate="yes">SizeRw</Title>
+			</Column>
+			<Column content-type="NumericalValue" relative-specifier=":SizeRootFs">
+				<Title its:translate="yes">SizeRootFs</Title>
+			</Column>
+			<Column content-type="NumericalValue" relative-specifier="|Memory:Current Usage">
+				<Title its:translate="yes">Memory in Use</Title>
+			</Column>
+		</MetricDataTable>
+	</ComponentDefinition>
+  <ComponentDefinition id="container-title">
+			<Panel columns="1" layout="GridLayout" rows="2">
+				<LiveMetricValueLabel relative-metric=":Image">
+					<Title>Image: </Title>
+				</LiveMetricValueLabel>
+				<LiveMetricValueLabel relative-metric=":Status">
+					<Title>Status: </Title>
+				</LiveMetricValueLabel>
+			</Panel>
+	</ComponentDefinition>
+	<ComponentDefinition id="container-graph">
+		<Panel columns="1" layout="GridLayout" rows="1">
+			<Graph relative-specifier=":Size.*">
+				<Title its:translate="yes">File systems</Title>
+			</Graph>
+  	</Panel>
+	</ComponentDefinition>
+	<ComponentDefinition id="cpu-graph">
+    <Panel columns="1" layout="GridLayout" rows="1">
+      <Graph relative-specifier=":(Kernel|Total|User Mode) \(Ticks\)">
+        <Title its:translate="yes">CPU (Ticks)</Title>
+      </Graph>
+    </Panel>
+  </ComponentDefinition>
+	<ComponentDefinition id="memory-graph">
+    <Panel columns="1" layout="GridLayout" rows="1">
+      <Graph relative-specifier=":(.*Usage|Limit)">
+        <Title its:translate="yes">Memory</Title>
+      </Graph>
+    </Panel>
+  </ComponentDefinition>
+	<ComponentDefinition id="network-graph">
+    <Panel columns="2" layout="GridLayout" rows="2">
+      <Graph relative-specifier=":Errors">
+        <Title its:translate="yes">Errors</Title>
+      </Graph>
+			<Graph relative-specifier=":Dropped">
+        <Title its:translate="yes">Dropped</Title>
+      </Graph>
+			<Graph relative-specifier=":Packets">
+        <Title its:translate="yes">Packets</Title>
+      </Graph>
+			<Graph relative-specifier=":Bytes">
+        <Title its:translate="yes">Bytes</Title>
+      </Graph>
+    </Panel>
+  </ComponentDefinition>
+	<!-- Docker Type Viewers -->
+	<TypeViewer id="Docker-Overview" supported-items-specifier="Docker"
+		tab-order="9">
+		<Title its:translate="yes">Docker</Title>
+    <SplitPane split-ratio="0.6">
+      <Component id="docker-graph" />
+      <Component id="container-table" specifier-prepend="Containers\|[^\|]*" show-bottom-graph="false"/>
+    </SplitPane>
+	</TypeViewer>
+	<TypeViewer id="Docker-Containers" supported-items-specifier="Docker\|Containers"
+		tab-order="10">
+		<Title its:translate="yes">Docker</Title>
+		<Component id="container-table" specifier-prepend="[^\|]*" show-bottom-graph="false"/>
+	</TypeViewer>
+	<TypeViewer id="Docker-Container" supported-items-specifier="Docker\|Containers\|[^\|]*"
+		tab-order="10">
+		<Title its:translate="yes">Docker</Title>
+		<SplitPane split-ratio="0.05">
+			<Component id="container-title" />
+			<Panel columns="1" layout="GridLayout" rows="2">
+				<Panel columns="3" layout="GridLayout" rows="1">
+					<Component id="container-graph" />
+					<Component id="cpu-graph" specifier-prepend="CPU"/>
+					<Component id="memory-graph" specifier-prepend="Memory"/>
+				</Panel>
+				<Panel columns="2" layout="GridLayout" rows="1">
+					<Component id="network-graph" specifier-prepend="Network\|Receive" />
+					<Component id="network-graph" specifier-prepend="Network\|Transmit" />
+				</Panel>
+			</Panel>
+		</SplitPane>
+	</TypeViewer>
+	<TypeViewer id="Docker-CPU" supported-items-specifier="Docker\|Containers\|[^\|]*\|CPU"
+		tab-order="10">
+		<Title its:translate="yes">Docker</Title>
+		<Component id="cpu-graph" />
+	</TypeViewer>
+	<TypeViewer id="Docker-Memory" supported-items-specifier="Docker\|Containers\|[^\|]*\|Memory"
+		tab-order="10">
+		<Title its:translate="yes">Docker</Title>
+		<Component id="memory-graph" />
+	</TypeViewer>
+	<TypeViewer id="Docker-Network" supported-items-specifier="Docker\|Containers\|[^\|]*\|Network"
+		tab-order="10">
+		<Title its:translate="yes">Docker</Title>
+		<Panel columns="2" layout="GridLayout" rows="1">
+			<Component id="network-graph" specifier-prepend="Receive" />
+			<Component id="network-graph" specifier-prepend="Transmit" />
+		</Panel>
+	</TypeViewer>
+	<TypeViewer id="Docker-Network-Receive" supported-items-specifier="Docker\|Containers\|[^\|]*\|Network\|(Receive|Transmit)"
+		tab-order="10">
+		<Title its:translate="yes">Docker</Title>
+		<Component id="network-graph" />
+	</TypeViewer>
+</TypeViewerSet>
