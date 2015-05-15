@@ -9,7 +9,6 @@
 # This script will collect statistics from docker via the Remote API.
 # The statistics are stored under the following groups: Docker
 #
-# TODO
 #       collectDocker:
 #           Calls the Docker Remote API an retrieves container statistics.
 #
@@ -57,6 +56,7 @@ import json
 import optparse
 import requests
 import sys
+import time
 from datetime import datetime
 
 """
@@ -233,6 +233,7 @@ def main(argv):
     parser.add_option("-p", "--port", help = "port EPAgent is connected to",
         type = "int", default = 8080, dest = "port")
     parser.add_option("-m", "--metric_path", help = "metric path header for all metrics",
+        # should we add the hostname?
         #dest = "metricPath", default = "Docker|{0}".format(socket.gethostname()))
         dest = "metricPath", default = "Docker")
     parser.add_option("-d", "--docker_host", help = "docker hostname",
