@@ -55,6 +55,7 @@
 import json
 import optparse
 import requests
+import socket
 import sys
 import time
 from datetime import datetime
@@ -234,8 +235,8 @@ def main(argv):
         type = "int", default = 8080, dest = "port")
     parser.add_option("-m", "--metric_path", help = "metric path header for all metrics",
         # should we add the hostname?
-        #dest = "metricPath", default = "Docker|{0}".format(socket.gethostname()))
-        dest = "metricPath", default = "Docker")
+        dest = "metricPath", default = "Docker|{0}".format(socket.gethostname()))
+        #dest = "metricPath", default = "Docker")
     parser.add_option("-d", "--docker_host", help = "docker hostname",
         dest = "dockerhost", default = "localhost")
     parser.add_option("-r", "--docker_port", help = "docker Remote API port",
