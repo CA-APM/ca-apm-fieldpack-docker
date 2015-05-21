@@ -39,11 +39,14 @@
 			<Column content-type="LastPrefixSegment">
 				<Title its:translate="yes">Name</Title>
 			</Column>
+			<Column content-type="NumericalValue" relative-specifier=":Running">
+				<Title its:translate="yes">Running</Title>
+			</Column>
+			<Column content-type="StringValue" relative-specifier=":Status" sort="Descending">
+				<Title its:translate="yes">Status</Title>
+			</Column>
 			<Column content-type="StringValue" relative-specifier=":Image">
 				<Title its:translate="yes">Image</Title>
-			</Column>
-			<Column content-type="NumericalValue" relative-specifier=":Status">
-				<Title its:translate="yes">Status</Title>
 			</Column>
 			<Column content-type="NumericalValue" relative-specifier=":SizeRw">
 				<Title its:translate="yes">SizeRw</Title>
@@ -143,13 +146,10 @@
 		<Title its:translate="yes">Docker</Title>
 		<SplitPane split-ratio="0.05">
 			<Component id="container-title" />
-			<Panel columns="1" layout="GridLayout" rows="2">
-				<Panel columns="3" layout="GridLayout" rows="1">
-					<Component id="container-graph" />
-					<Component id="cpu-graph" specifier-prepend="CPU"/>
-					<Component id="memory-graph" specifier-prepend="Memory"/>
-				</Panel>
-				<Component id="network-panel" specifier-prepend="Network"/>
+			<Panel columns="1" layout="GridLayout" rows="3">
+				<Component id="container-graph" />
+				<Component id="cpu-graph" specifier-prepend="CPU"/>
+				<Component id="memory-graph" specifier-prepend="Memory"/>
 			</Panel>
 		</SplitPane>
 	</TypeViewer>
