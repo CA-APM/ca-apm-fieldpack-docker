@@ -64,17 +64,20 @@ from datetime import datetime
 global dicts for metrics to display
 """
 
+# mapping for GET /info
 infoMap = { 'Containers'    : ':Container Count',
             'Images'        : ':Image Count',
             'MemTotal'      : ':Total Memory',
             'MemoryLimit'   : ':MemoryLimit',
             'SwapLimit'     : ':SwapLimit' }
 
+# mapping for GET /containers/json
 containerMap = { 'Image'    : ':Image',
             'SizeRw'        : ':SizeRw',
             'SizeRootFs'    : ':SizeRootFs',
             'Status'        : ':Status' }
 
+# mapping for GET /containers/(id)/stats
 statsMap = {'network' : {   'rx_dropped': '|Network|Receive:Dropped',
                             'rx_bytes'  : '|Network|Receive:Bytes',
                             'rx_errors' : '|Network|Receive:Errors',
@@ -92,7 +95,10 @@ statsMap = {'network' : {   'rx_dropped': '|Network|Receive:Dropped',
                                             'total_usage' :         '|CPU:Total (Ticks)',
                                             'usage_in_kernelmode' : '|CPU:Kernel (Ticks)'}}}
 
+# controls if we print information
+verbose = 0
 
+# call a url and return a dictionary containing the json response
 def callUrl(url, certfile, keyfile):
     try:
         response = requests.get(url, cert=(certfile, keyfile))
@@ -107,6 +113,8 @@ def callUrl(url, certfile, keyfile):
     return data
 
 
+# call a url and return a dictionary containing the json response
+# only returns the first repsonse of a stream
 def streamUrl(url, certfile, keyfile):
     response = requests.get(url, cert=(certfile, keyfile), stream=True)
 
@@ -117,110 +125,127 @@ def streamUrl(url, certfile, keyfile):
         #print(json.dumps(data, sort_keys=True, indent=4))
         return data
 
+# add a metric to the dictionary
+# param metricDict: container for sending metrics to EPAgent
+# param metricType: metric data type, e.g. IntCounter, StringEvent
+# param metricName: the full metric name
+# param metricValue: the metric value
+def addMetric(metricDict, metricType, metricName, metricValue):
+    m = {}
+    m['type'] = metricType
+    m['name'] = metricName
+    m['value']= '{0}'.format(metricValue)
+    metricDict['metrics'].append(m)
 
+
+# transform the metrics from the values dictionary into the metricDict
+# param values source metric data
+# param metricPath metric path to prepend
+# param metricDict target container for metrics to send
+# param metricMap mapping from values to metrics, only keys present in the
+# metricMap will be mapped
 def writeMetrics(values, metricPath, metricDict, metricMap):
 
-    for key in values.keys():
+    try:
+        for key in values.keys():
 
-        name = metricMap.get(key)
+            name = metricMap.get(key)
 
-        if name:
-            #print('type of {} is {}, name = {}'.format(key, type(values[key]), name))
-            #if (type(values[key]) is list):
-            #    for entry in values[key]:
+            if name:
+                #print('type of {} is {}, name = {}'.format(key, type(values[key]), name))
+                #if (type(values[key]) is list):
+                #    for entry in values[key]:
 
-            if (type(values[key]) is dict):
-                writeMetrics(values[key], metricPath, metricDict, metricMap[key])
+                if (type(values[key]) is dict):
+                    writeMetrics(values[key], metricPath, metricDict, metricMap[key])
 
-            if (type(values[key]) is str):
-                m = {}
-                m['type'] = 'StringEvent'
-                m['name'] = metricPath + '{0}'.format(name)
-                m['value']= "{0}".format(values[key])
-                metricDict['metrics'].append(m)
+                if (type(values[key]) is str):
+                    addMetric(metricDict, 'StringEvent', metricPath + '{0}'.format(name), values[key])
 
-            if (type(values[key]) is int):
-                # use long if it ends with 'Limit', '(Ticks)' or 'bytes'
-                if ((-1 < name.find('Limit', len(name)-5, len(name))) or
-                    (-1 < name.find('(Ticks)', len(name)-7, len(name))) or
-                    (-1 < name.find('bytes', len(name)-5, len(name)))):
-                    m = {}
-                    m['type'] = 'LongCounter'
-                    m['name'] = metricPath + '{0}'.format(name)
-                    m['value']= "{0}".format(values[key])
-                    metricDict['metrics'].append(m)
-                else:
-                    if ((-1 < key.find('Average', 0, 7)) or (-1 < key.find('PercentUsage', len(key)-12, len(key)))):
-                        # should be IntPercentage for 'PercentUsage' but this is not a EPA supported metric data type
-                        m = {}
-                        m['type'] = 'IntAverage'
-                        m['name'] = metricPath + '{0}'.format(name)
-                        m['value']= "{0}".format(values[key])
-                        metricDict['metrics'].append(m)
+                if (type(values[key]) is int):
+                    # use long if it ends with 'Limit', '(Ticks)' or 'bytes'
+                    if ((-1 < name.find('Limit', len(name)-5, len(name))) or
+                        (-1 < name.find('(Ticks)', len(name)-7, len(name))) or
+                        (-1 < name.find('bytes', len(name)-5, len(name)))):
+                        addMetric(metricDict, 'LongCounter', metricPath + '{0}'.format(name), values[key])
                     else:
-                        m = {}
-                        m['type'] = 'IntCounter'
-                        m['name'] = metricPath + '{0}'.format(name)
-                        m['value']= "{0}".format(values[key])
-                        metricDict['metrics'].append(m)
+                        if ((-1 < key.find('Average', 0, 7)) or (-1 < key.find('PercentUsage', len(key)-12, len(key)))):
+                            # should be IntPercentage for 'PercentUsage' but this is not a EPA supported metric data type
+                            addMetric(metricDict, 'IntAverage', metricPath + '{0}'.format(name), values[key])
+                        else:
+                            addMetric(metricDict, 'IntCounter', metricPath + '{0}'.format(name), values[key])
 
-            if (type(values[key]) is bool):
-                if (-1 == key.find('Limit', len(key)-5, len(key))):
-                    m = {}
-                    m['type'] = 'IntAverage'
-                    m['name'] = metricPath + '{0}'.format(name)
-                    if (values[key]):
-                        m['value']= '1'
-                    else:
-                        m['value']= '0'
-                    metricDict['metrics'].append(m)
+                if (type(values[key]) is bool):
+                    if (-1 == key.find('Limit', len(key)-5, len(key))):
+                        if (values[key]):
+                            addMetric(metricDict, 'IntAverage', metricPath + '{0}'.format(name), '1')
+                        else:
+                            addMetric(metricDict, 'IntAverage', metricPath + '{0}'.format(name), '0')
 
-            if (type(values[key]) is float):
-                m = {}
-                m['type'] = 'IntCounter'
-                m['name'] = metricPath + '{0}'.format(name)
-                m['value']= "{0}".format(int(float(values[key] + .5)))
-                metricDict['metrics'].append(m)
+                if (type(values[key]) is float):
+                    addMetric(metricDict, 'IntCounter', metricPath + '{0}'.format(name), int(float(values[key] + .5)))
 
+    except AttributeError as err:
+        # ignore as the container is not running any more
+        return
 
-
+# collect metrics from docker engien and put them into metricDict
 def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyfile):
 
-    """
-    Get docker system wide information
-    """
-
+    # get docker system wide information
     url = "https://{0}:{1}/info".format(dockerhost, dockerport)
     data = callUrl(url, certfile, keyfile)
     #print(json.dumps(data, sort_keys=True, indent=4))
     writeMetrics(data, metricPath, metricDict, infoMap)
 
-
-    """
-    Conversion of docker statistics data into metrics to be harvested
-    """
-
-    url = "https://{0}:{1}/containers/json?size=1".format(dockerhost, dockerport)
+    # get docker container info
+    url = "https://{0}:{1}/containers/json?size=1&all=1".format(dockerhost, dockerport)
     data = callUrl(url, certfile, keyfile)
     #print(json.dumps(data, sort_keys=True, indent=4))
 
-    # create Running Containers metric
-    m = {}
-    m['type'] = 'IntCounter'
-    m['name'] = metricPath + ":Running Containers"
-    m['value']= "{0}".format(len(data))
-    metricDict['metrics'].append(m)
-
+    # count running containers
+    running = 0
 
     for container in data:
         name = container['Names'][0];
         containerMetricPath = metricPath + '|Containers|' + name
         writeMetrics(container, containerMetricPath, metricDict, containerMap)
 
-        url = "https://{0}:{1}/containers{2}/stats".format(dockerhost, dockerport, name)
-        container_data = streamUrl(url, certfile, keyfile)
-        #print(json.dumps(container_data, sort_keys=True, indent=4))
-        writeMetrics(container_data, containerMetricPath, metricDict, statsMap)
+        if (container['Status'].startswith('Up')):
+            addMetric(metricDict, 'IntAverage', metricPath + 'Running', '1')
+            running = running + 1
+            # get container stats
+            url = "https://{0}:{1}/containers{2}/stats".format(dockerhost, dockerport, name)
+            container_data = streamUrl(url, certfile, keyfile)
+            #print(json.dumps(container_data, sort_keys=True, indent=4))
+            writeMetrics(container_data, containerMetricPath, metricDict, statsMap)
+        else:
+            addMetric(metricDict, 'IntAverage', metricPath + 'Running', '0')
+
+    # create Running Containers metric
+    addMetric(metricDict, 'IntCounter', metricPath + ':Running Containers', running)
+
+
+# convert metric Dictionary into a JSON message via the
+# json package.  Post resulting message to EPAgent RESTful
+# interface.
+def sendMetrics(url, headers, metricDict):
+    try:
+        r = requests.post(url, data = json.dumps(metricDict),
+                          headers = headers)
+    except requests.ConnectionError as err:
+        print("Unable to connect to EPAgent via URL \"{}\": {}\ncheck httpServerPort and that EPAgent is running!".format(url, err))
+        sys.exit(1)
+
+    if verbose:
+        print("jsonDump:")
+        print(json.dumps(metricDict, indent = 4))
+
+        print("Response:")
+        response = json.loads(r.text)
+        print(json.dumps(response, indent = 4))
+
+        print("StatusCode: {0}".format(r.status_code))
 
 
 def main(argv):
@@ -259,6 +284,7 @@ def main(argv):
     if options.verbose:
         print("Submitting to: {0}".format(url))
 
+    verbose = options.verbose
     submissionCount = 0
 
 
@@ -270,30 +296,11 @@ def main(argv):
         # Metrics are collected in the metricDict dictionary.
         metricDict = {'metrics' : []}
 
+        # get data from docker engine
         collectDocker(metricDict, options.metricPath, options.dockerhost, options.dockerport, options.certfile, options.keyfile)
 
-        #
-        # convert metric Dictionary into a JSON message via the
-        # json package.  Post resulting message to EPAgent RESTful
-        # interface.
-        #
-
-        try:
-            r = requests.post(url, data = json.dumps(metricDict),
-                              headers = headers)
-        except requests.ConnectionError as err:
-            print("Unable to connect to EPAgent via URL \"{}\": {}\ncheck httpServerPort and that EPAgent is running!".format(url, err))
-            sys.exit(1)
-
-        if options.verbose:
-            print("jsonDump:")
-            print(json.dumps(metricDict, indent = 4))
-
-            print("Response:")
-            response = json.loads(r.text)
-            print(json.dumps(response, indent = 4))
-
-            print("StatusCode: {0}".format(r.status_code))
+        # send metrics to EPAgent
+        sendMetrics(url, headers, metricDict)
 
         submissionCount += 1
         # print("Submitted metric: {0}".format(submissionCount))
@@ -302,7 +309,8 @@ def main(argv):
         delta = end-start
         howlong = 15.0 - delta.seconds
         howlong = (howlong * 100000 - delta.microseconds) / 100000
-        time.sleep(howlong)
+        if (howlong > 0):
+            time.sleep(howlong)
 
 if __name__ == "__main__":
     main(sys.argv)
