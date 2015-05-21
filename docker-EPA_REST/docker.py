@@ -95,9 +95,6 @@ statsMap = {'network' : {   'rx_dropped': '|Network|Receive:Dropped',
                                             'total_usage' :         '|CPU:Total (Ticks)',
                                             'usage_in_kernelmode' : '|CPU:Kernel (Ticks)'}}}
 
-# controls if we print information
-verbose = 0
-
 # call a url and return a dictionary containing the json response
 def callUrl(url, certfile, keyfile):
     try:
@@ -212,7 +209,7 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
         writeMetrics(container, containerMetricPath, metricDict, containerMap)
 
         if (container['Status'].startswith('Up')):
-            addMetric(metricDict, 'IntAverage', metricPath + 'Running', '1')
+            addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '1')
             running = running + 1
             # get container stats
             url = "https://{0}:{1}/containers{2}/stats".format(dockerhost, dockerport, name)
@@ -220,7 +217,7 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
             #print(json.dumps(container_data, sort_keys=True, indent=4))
             writeMetrics(container_data, containerMetricPath, metricDict, statsMap)
         else:
-            addMetric(metricDict, 'IntAverage', metricPath + 'Running', '0')
+            addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '0')
 
     # create Running Containers metric
     addMetric(metricDict, 'IntCounter', metricPath + ':Running Containers', running)
@@ -229,7 +226,7 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
 # convert metric Dictionary into a JSON message via the
 # json package.  Post resulting message to EPAgent RESTful
 # interface.
-def sendMetrics(url, headers, metricDict):
+def sendMetrics(url, headers, metricDict, verbose):
     try:
         r = requests.post(url, data = json.dumps(metricDict),
                           headers = headers)
@@ -237,7 +234,7 @@ def sendMetrics(url, headers, metricDict):
         print("Unable to connect to EPAgent via URL \"{}\": {}\ncheck httpServerPort and that EPAgent is running!".format(url, err))
         sys.exit(1)
 
-    if verbose:
+    if verbose == True:
         print("jsonDump:")
         print(json.dumps(metricDict, indent = 4))
 
@@ -246,6 +243,7 @@ def sendMetrics(url, headers, metricDict):
         print(json.dumps(response, indent = 4))
 
         print("StatusCode: {0}".format(r.status_code))
+
 
 
 def main(argv):
@@ -284,11 +282,10 @@ def main(argv):
     if options.verbose:
         print("Submitting to: {0}".format(url))
 
-    verbose = options.verbose
     submissionCount = 0
 
 
-
+    # main loop
     while True:
 
         start = datetime.now()
@@ -300,15 +297,15 @@ def main(argv):
         collectDocker(metricDict, options.metricPath, options.dockerhost, options.dockerport, options.certfile, options.keyfile)
 
         # send metrics to EPAgent
-        sendMetrics(url, headers, metricDict)
+        sendMetrics(url, headers, metricDict, options.verbose)
 
         submissionCount += 1
-        # print("Submitted metric: {0}".format(submissionCount))
+        if options.verbose == True:
+            print("Submitted metric: {0}".format(submissionCount))
 
         end = datetime.now()
         delta = end-start
-        howlong = 15.0 - delta.seconds
-        howlong = (howlong * 100000 - delta.microseconds) / 100000
+        howlong = ((15.0 - delta.seconds) * 1000000 - delta.microseconds) / 1000000
         if (howlong > 0):
             time.sleep(howlong)
 
