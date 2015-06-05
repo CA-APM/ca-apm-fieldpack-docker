@@ -10,7 +10,7 @@ Restful EPAgent 9.7.1.
 Tested with Docker version 1.6.1, API version 1.18.
 
 ## Limitations
-Currently the field pack only queries one docker engine and only works via https ().
+Currently the field pack only queries one docker engine and only works via https. This runs fine with boot2docker.
 
 ## License
 [Apache License, Version 2.0, January 2004](http://www.apache.org/licenses/). See [Licensing](https://communities.ca.com/docs/DOC-231150910#license) on the CA APM Developer Community.
