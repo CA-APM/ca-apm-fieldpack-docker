@@ -58,6 +58,7 @@ import requests
 import socket
 import sys
 import time
+import ssl
 from datetime import datetime
 
 """
@@ -99,7 +100,7 @@ statsMap = {'network' : {   'rx_dropped': '|Network|Receive:Dropped',
 # call a url and return a dictionary containing the json response
 def callUrl(url, certfile, keyfile):
     try:
-        response = requests.get(url, cert=(certfile, keyfile))
+        response = requests.get(url, cert=(certfile, keyfile), verify=False)
     except requests.exceptions.SSLError as err:
         print("Unable to connect to docker via URL \"{}\": {}\ncheck certificate!".format(url, err))
         sys.exit(1)
@@ -114,7 +115,7 @@ def callUrl(url, certfile, keyfile):
 # call a url and return a dictionary containing the json response
 # only returns the first repsonse of a stream
 def streamUrl(url, certfile, keyfile):
-    response = requests.get(url, cert=(certfile, keyfile), stream=True)
+    response = requests.get(url, cert=(certfile, keyfile), stream=True, verify=False)
 
     for line in response.iter_lines():
         # only read first line
