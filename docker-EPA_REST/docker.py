@@ -75,7 +75,8 @@ infoMap = { 'Containers'    : ':Container Count',
 containerMap = { 'Image'    : ':Image',
             'SizeRw'        : ':SizeRw',
             'SizeRootFs'    : ':SizeRootFs',
-            'Status'        : ':Status' }
+            'Status'        : ':Status',
+            'Id'            : ':Id' }
 
 # mapping for GET /containers/(id)/stats
 statsMap = {'network' : {   'rx_dropped': '|Network|Receive:Dropped',
@@ -157,6 +158,9 @@ def writeMetrics(values, metricPath, metricDict, metricMap):
                     writeMetrics(values[key], metricPath, metricDict, metricMap[key])
 
                 if (type(values[key]) is str):
+                    # only get first 12 characters from Id
+                    if (name == ':Id'):
+                        addMetric(metricDict, 'StringEvent', metricPath + '{0}'.format(name), values[key][:12])
                     addMetric(metricDict, 'StringEvent', metricPath + '{0}'.format(name), values[key])
 
                 if (type(values[key]) is int):

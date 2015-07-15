@@ -45,6 +45,9 @@
 			<Column content-type="StringValue" relative-specifier=":Status" sort="Descending">
 				<Title its:translate="yes">Status</Title>
 			</Column>
+			<Column content-type="StringValue" relative-specifier=":Id">
+				<Title its:translate="yes">ID</Title>
+			</Column>
 			<Column content-type="StringValue" relative-specifier=":Image">
 				<Title its:translate="yes">Image</Title>
 			</Column>
