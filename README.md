@@ -43,28 +43,30 @@ Nothing else to configure.
 ## Running the Docker field pack
 Run `python3 docker.py` from the command line, e.g.:
 
-`python3 docker.py -p 8080 -d boot2docker -r 2376 --certificate=$DOCKER\_CERT\_PATH/cert.pem -k $DOCKER\_CERT\_PATH/key.pem`.
+`python3 docker.py -p 8080 -d boot2docker -r 2376 --certificate=$DOCKER_CERT_PATH/cert.pem -k $DOCKER_CERT_PATH/key.pem`
 
-Run the script with option '-h' to get this usage information:
+Change the parameters to fit your environment. Run the script with option '-h' to get this usage information:
 
-<pre>Usage: docker.py [options]<br/>
-<br/>
-Options:<br/>
-    -h, --help            show this help message and exit<br/>
-    -v, --verbose         verbose output<br/>
-    -H HOSTNAME, --hostname=HOSTNAME<br/>
-                          hostname EPAgent is running on<br/>
-    -p PORT, --port=PORT  port EPAgent is connected to<br/>
-    -m METRICPATH, --metric_path=METRICPATH<br/>
-                          metric path header for all metrics<br/>
-    -d DOCKERHOST, --docker_host=DOCKERHOST<br/>
-                          docker hostname<br/>
-    -r DOCKERPORT, --docker_port=DOCKERPORT<br/>
-                          docker Remote API port<br/>
-    -c CERTFILE, --certificate=CERTFILE<br/>
-                          https certificate<br/>
-    -k KEYFILE, --private_key=KEYFILE<br/>
-                          https private key</pre>
+```
+Usage: docker.py [options]
+
+Options:
+    -h, --help            show this help message and exit
+    -v, --verbose         verbose output
+    -H HOSTNAME, --hostname=HOSTNAME
+                          hostname EPAgent is running on (default: localhost)
+    -p PORT, --port=PORT  http port of the EPAgent (introscope.epagent.config.httpServerPort)
+    -m METRICPATH, --metric_path=METRICPATH
+                          metric path prefix for all metrics
+    -d DOCKERHOST, --docker_host=DOCKERHOST
+                          docker hostname (default: localhost)
+    -r DOCKERPORT, --docker_port=DOCKERPORT
+                          docker Remote API port (default: 2376)
+    -c CERTFILE, --certificate=CERTFILE
+                          https certificate
+    -k KEYFILE, --private_key=KEYFILE
+                          https private key
+```
 
 ## Metric description
 Metrics are published under the metrics path "Docker". At this level general information about this docker engine is provided:
@@ -89,7 +91,11 @@ For more information see [Docker Remote API](https://docs.docker.com/reference/a
 None.
 
 ## Custom type viewers
-The type viewer docker.typeviewers.xml matches metric paths starting with "Docker". There is an overview providing general metrics and a list of containers. For a container file system, CPU, memory and network metrics are shown as graphs.
+The type viewer docker.typeviewers.xml matches metric paths starting with "Docker". Copy it to the `ext/xmltv` folder of your APM Enterprise Manager and restart WebView or log off and back on to your Workstation. There is an overview providing general metrics and a list of containers. You can even see a Java agent monitoring the Tomcat application server running in container b9febdfcdd77:
+![Docker overview](Docker-overview.png "Docker overview")
+
+For every container metrics about file system, CPU, memory and network metrics are shown as graphs:
+![Docker container metrics](Docker-container.png "Docker container metrics")
 
 ## Debugging and Troubleshooting
 Your can run docker.py with option -v to provide verbose output. In addition you can remove the '#' in front of several print statements throughput the script.

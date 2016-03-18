@@ -13,7 +13,7 @@
 #           Calls the Docker Remote API an retrieves container statistics.
 #
 # The metrics will be default be reported under
-# 'Docker|Containers|<container>|...'.  As
+# 'Docker|<host>|Containers|<container>|...'.  As
 # multiple hosts can report to a single EPAgent's RESTful interface.  The inclusion
 # the <hostname> in the metric path gives a opportunity to disambiguate those
 # usages.
@@ -151,7 +151,7 @@ def writeMetrics(values, metricPath, metricDict, metricMap):
             name = metricMap.get(key)
 
             if name:
-                #print('type of {} is {}, name = {}'.format(key, type(values[key]), name))
+                #print('type of {} is {}, name = {}, value = {}'.format(key, type(values[key]), name, values[key]))
                 #if (type(values[key]) is list):
                 #    for entry in values[key]:
 
@@ -196,6 +196,7 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
 
     # get docker system wide information
     url = "https://{0}:{1}/info".format(dockerhost, dockerport)
+    #print("calling {}".format(url))
     data = callUrl(url, certfile, keyfile)
     #print(json.dumps(data, sort_keys=True, indent=4))
     writeMetrics(data, metricPath, metricDict, infoMap)
@@ -210,6 +211,11 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
 
     for container in data:
         name = container['Names'][0];
+        # iterate through names and take that with only one /
+        for myname in container['Names']:
+            if (myname.find("/", 1) == -1):
+                name = myname
+
         containerMetricPath = metricPath + '|Containers|' + name
         writeMetrics(container, containerMetricPath, metricDict, containerMap)
 
@@ -217,8 +223,9 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
             addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '1')
             running = running + 1
             # get container stats
-            url = "https://{0}:{1}/containers{2}/stats".format(dockerhost, dockerport, name)
-            container_data = streamUrl(url, certfile, keyfile)
+            url = "https://{0}:{1}/containers{2}/stats?stream=0".format(dockerhost, dockerport, name)
+            #print("calling {0}".format(url))
+            container_data = callUrl(url, certfile, keyfile)
             #print(json.dumps(container_data, sort_keys=True, indent=4))
             writeMetrics(container_data, containerMetricPath, metricDict, statsMap)
         else:
@@ -240,8 +247,8 @@ def sendMetrics(url, headers, metricDict, verbose):
         sys.exit(1)
 
     if verbose == True:
-        print("jsonDump:")
-        print(json.dumps(metricDict, indent = 4))
+        #print("jsonDump:")
+        #print(json.dumps(metricDict, indent = 4))
 
         print("Response:")
         response = json.loads(r.text)
@@ -310,6 +317,7 @@ def main(argv):
 
         end = datetime.now()
         delta = end-start
+        #print("{0}".format(end))
         howlong = ((15.0 - delta.seconds) * 1000000 - delta.microseconds) / 1000000
         if (howlong > 0):
             time.sleep(howlong)
