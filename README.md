@@ -112,3 +112,14 @@ Unless explicitly stated otherwise this field pack is only supported on the same
 Version | Author | Comment
 --------|--------|--------
 1.0 | [Guenter Grossberger](mailto:Guenter.Grossberger@ca.com) | First version of the field pack.
+
+## Support URL
+https://github.com/CA-APM/ca-apm-fieldpack-docker/issues
+
+## Short Description
+Monitor Docker with CA APM
+
+## Categories
+Cloud
+
+
