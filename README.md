@@ -120,6 +120,4 @@ https://github.com/CA-APM/ca-apm-fieldpack-docker/issues
 Monitor Docker with CA APM
 
 ## Categories
-Cloud
-
-
+Cloud, Virtualization/Containers
