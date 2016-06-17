@@ -7,12 +7,10 @@
 	<packaging>pom</packaging>
 
 	<build>
-
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
-
 				<executions>
 					<execution>
 						<id>create-distribution</id>
@@ -21,16 +19,13 @@
 							<goal>single</goal>
 						</goals>
 						<configuration>
-
 							<descriptors>
 								<descriptor>assembly.xml</descriptor>
 							</descriptors>
-
 						</configuration>
 					</execution>
 				</executions>
 			</plugin>
-
 
 			<plugin>
 				<groupId>com.ruleoftech</groupId>
@@ -45,8 +40,8 @@
 					</execution>
 				</executions>
 				<configuration>
-					<inputDirectory>${basedir}</inputDirectory>
-					<outputDirectory>${basedir}</outputDirectory>
+					<inputDirectory>${project.basedir}</inputDirectory>
+					<outputDirectory>${project.build.directory}</outputDirectory>
 				</configuration>
 
 			</plugin>
