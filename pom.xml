@@ -2,7 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ca.apm.fieldpacks</groupId>
-	<artifactId>ca-apm-acc-api-scripts</artifactId>
+	<artifactId>ca-apm-fieldpack-docker</artifactId>
+	<name>CA APM Docker Field Pack</name>
 	<version>1.0.0</version>
 	<packaging>pom</packaging>
 
