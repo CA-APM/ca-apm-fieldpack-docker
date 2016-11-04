@@ -211,26 +211,27 @@ def collectDocker(metricDict, metricPath, dockerhost, dockerport, certfile, keyf
     running = 0
 
     for container in data:
-        name = container['Names'][0];
-        # iterate through names and take that with only one /
-        for myname in container['Names']:
-            if (myname.find("/", 1) == -1):
-                name = myname
+        if (container['Names']):
+            name = container['Names'][0];
+            # iterate through names and take that with only one /
+            for myname in container['Names']:
+                if (myname.find("/", 1) == -1):
+                    name = myname
 
-        containerMetricPath = metricPath + '|Containers|' + name
-        writeMetrics(container, containerMetricPath, metricDict, containerMap)
+            containerMetricPath = metricPath + '|Containers|' + name
+            writeMetrics(container, containerMetricPath, metricDict, containerMap)
 
-        if (container['Status'].startswith('Up')):
-            addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '1')
-            running = running + 1
-            # get container stats
-            url = "https://{0}:{1}/containers{2}/stats?stream=0".format(dockerhost, dockerport, name)
-            #print("calling {0}".format(url))
-            container_data = callUrl(url, certfile, keyfile)
-            #print(json.dumps(container_data, sort_keys=True, indent=4))
-            writeMetrics(container_data, containerMetricPath, metricDict, statsMap)
-        else:
-            addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '0')
+            if (container['Status'].startswith('Up')):
+                addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '1')
+                running = running + 1
+                # get container stats
+                url = "https://{0}:{1}/containers{2}/stats?stream=0".format(dockerhost, dockerport, name)
+                #print("calling {0}".format(url))
+                container_data = callUrl(url, certfile, keyfile)
+                #print(json.dumps(container_data, sort_keys=True, indent=4))
+                writeMetrics(container_data, containerMetricPath, metricDict, statsMap)
+            else:
+                addMetric(metricDict, 'IntAverage', containerMetricPath + ':Running', '0')
 
     # create Running Containers metric
     addMetric(metricDict, 'IntCounter', metricPath + ':Running Containers', running)
