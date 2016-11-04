@@ -168,7 +168,8 @@ def writeMetrics(values, metricPath, metricDict, metricMap):
                     # use long if it ends with 'Limit', '(Ticks)' or 'bytes'
                     if ((-1 < name.find('Limit', len(name)-5, len(name))) or
                         (-1 < name.find('(Ticks)', len(name)-7, len(name))) or
-                        (-1 < name.find('bytes', len(name)-5, len(name)))):
+                        (-1 < name.find('bytes', len(name)-5, len(name))) or
+                        (-1 < name.find('Mem'))):
                         addMetric(metricDict, 'LongCounter', metricPath + '{0}'.format(name), values[key])
                     else:
                         if ((-1 < key.find('Average', 0, 7)) or (-1 < key.find('PercentUsage', len(key)-12, len(key)))):
